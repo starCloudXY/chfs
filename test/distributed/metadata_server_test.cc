@@ -73,16 +73,17 @@ TEST_F(MetadataServerTest, WriteAnEmptyFile) {
   // First create an file at '/root/fileA'
   auto file_id = meta_srv->mknode(RegularFileType, 1, "fileA");
   EXPECT_EQ(file_id, 2);
-
+        std::cerr<<"1 pass";
   // Get the block map and it must be an empty one
   auto block_map = meta_srv->get_block_map(file_id);
   EXPECT_EQ(block_map.size(), 0);
-
+        std::cerr<<"2 pass";
   // Now the client realize that the file is empty
   // so it needs to allocate some blocks
   auto [block_id, machine_id, version] = meta_srv->allocate_block(file_id);
   EXPECT_GT(machine_id, 0);
   EXPECT_LT(machine_id, 4);
+        std::cerr<<"3 pass";
   // Now we have the block and we directly write some
   // bytes into the block
   // create a client to connect with the node
@@ -155,11 +156,11 @@ TEST_F(MetadataServerTest, ReadWhenBlockIsInvalid) {
   // Create file and also write some data
   auto file_id = meta_srv->mknode(RegularFileType, 1, "fileA");
   EXPECT_EQ(file_id, 2);
-
+std::cerr<<"steo 1_______________";
   auto [block_id, machine_id, version] = meta_srv->allocate_block(file_id);
   EXPECT_GT(machine_id, 0);
   EXPECT_LT(machine_id, 4);
-
+        std::cerr<<"step 2_______________";
   auto cli = std::make_shared<RpcClient>("127.0.0.1",
                                          data_ports[machine_id - 1], true);
 
@@ -167,7 +168,7 @@ TEST_F(MetadataServerTest, ReadWhenBlockIsInvalid) {
   auto write_res = cli->call("write_data", block_id, 0, bytes);
   EXPECT_EQ(write_res.is_err(), false);
   EXPECT_EQ(write_res.unwrap()->as<bool>(), true);
-
+        std::cerr<<"step 3_______________";
   // And we free the block on the machine and reallocate one
   auto delete_res = cli->call("free_block", block_id);
   EXPECT_EQ(delete_res.is_err(), false);

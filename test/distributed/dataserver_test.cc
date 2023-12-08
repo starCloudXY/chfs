@@ -56,21 +56,28 @@ TEST_F(DataServerTest, AllocateAndDelete) {
 
 TEST_F(DataServerTest, ReadAndWrite) {
   // Create a RPC client and connect with the data server
+
   auto cli = std::make_unique<RpcClient>("127.0.0.1", 8080, true);
 
   // Try to allocate a block
   auto res = cli->call("alloc_block");
   EXPECT_EQ(res.is_err(), false);
-  auto [block_id, version] =
-      res.unwrap()->as<std::pair<block_id_t, version_t>>();
-  EXPECT_GT(block_id, 0);
+        std::cerr<<"1~~~~~~";
 
+        auto [block_id, version] =
+      res.unwrap()->as<std::pair<block_id_t, version_t>>();
+        std::cerr<<std::endl;
+  EXPECT_GT(block_id, 0);
+        std::cerr<<"2~~~~~~";
   // At first read 8 bytes somewhere inner the block
   // It should be all zero
   res = cli->call("read_data", block_id, 24, 8, version);
+        std::cerr<<"2.5~~~~~~";
   EXPECT_EQ(res.is_err(), false);
+        std::cerr<<"3~~~~~~";
   auto buffer = res.unwrap()->as<std::vector<u8>>();
   EXPECT_EQ(buffer.size(), 8);
+        std::cerr<<"4~~~~~~";
   for (int i = 0; i < 8; ++i) {
     EXPECT_EQ(buffer[i], 0);
   }

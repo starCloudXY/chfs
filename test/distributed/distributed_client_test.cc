@@ -74,7 +74,7 @@ TEST_F(DistributedClientTest, WriteAndThenRead) {
   EXPECT_EQ(inode.is_ok(), true);
   auto inode_id = inode.unwrap();
   ASSERT_EQ(inode_id, 2);
-
+//
   std::vector<u8> data = {'H', 'e', 'l', 'l', 'o'};
   // We choose to write 5 bytes between block 1 and block 2.
   auto file_offset = DiskBlockSize - 1;
