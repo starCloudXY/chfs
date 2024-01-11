@@ -18,8 +18,6 @@
 namespace chfs {
 
 // inode should be larger than 0
-const inode_id_t KInvalidInodeID = 0;
-
 class FileOperation;
 
 /**
