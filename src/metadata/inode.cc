@@ -11,6 +11,7 @@ auto Inode::end() -> InodeIterator {
 auto Inode::write_indirect_block(std::shared_ptr<BlockManager> &bm,
                                  std::vector<u8> &buffer) -> ChfsNullResult {
   if (this->blocks[this->nblocks - 1] == KInvalidBlockID) {
+      std::cout<<"invalid id "<<std::endl;
     return ChfsNullResult(ErrorType::INVALID_ARG);
   }
 

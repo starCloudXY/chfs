@@ -22,7 +22,8 @@ namespace chfs {
  * `DataServer` is slave server in chfs where the actual data are stored.
  *
  * In chfs, a file is split into one or more blocks and these blocks
- * are stored in a set of `DataServers`. It is responsible for serving
+ * are stored in a set of `DataServers`.
+ * It is responsible for serving
  * read and write requests from the client and some instructions like
  * block creation and deletion from the `MetadataServer`.
  */
@@ -86,7 +87,7 @@ public:
    * a 0-size vector(client wouldn't allow to read a data whose size is 0)
    */
   auto read_data(block_id_t block_id, usize offset, usize len,
-                 version_t version) -> std::vector<u8>;
+                  version_t version) -> std::vector<u8>;
 
   /**
    * A RPC handler for client. Write a piece of data in a given block.
@@ -119,6 +120,8 @@ public:
 private:
   std::unique_ptr<RpcServer> server_;
   std::shared_ptr<BlockAllocator> block_allocator_;
+  version_t current_version;
+
 };
 
 } // namespace chfs

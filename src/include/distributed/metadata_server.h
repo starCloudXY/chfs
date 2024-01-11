@@ -18,9 +18,16 @@
 #include "metadata/manager.h"
 #include "filesystem/operations.h"
 #include "distributed/commit_log.h"
-
+#include <shared_mutex>
 namespace chfs {
-
+    const u8 meta_mtx_num = 4;
+    const u8 data_mtx_num = 4;
+inline auto meta_lock_num(inode_id_t id)->u8{
+    return id % meta_mtx_num;
+}
+inline auto data_lock_num(mac_id_t macId) -> u8 {
+    return macId % data_mtx_num;
+}
 /**
  * `MetadataServer` is the master server in chfs where the metadata is stored.
  *
@@ -193,6 +200,7 @@ public:
    * Recover the system from log
    */
   auto recover() -> void {
+      std::cout<<"begin to recover.\n";
     if (!is_log_enabled_) {
       std::cerr << "Log not enabled\n";
       return;
@@ -200,6 +208,7 @@ public:
     operation_->block_manager_->set_may_fail(false);
     commit_log->recover();
     operation_->block_manager_->set_may_fail(true);
+    std::cout<<"finish recover!\n";
   }
 
   /**
@@ -245,6 +254,14 @@ private:
   /**
    * {You can add anything you want here}
    */
+  std::atomic<usize> txn_id = 0;
+
+  std::shared_mutex meta_mtx[meta_mtx_num];
+  std::shared_mutex data_mtx[data_mtx_num];
+  void meta_lock_all();
+  void meta_unlock_all();
+  void data_lock_all();
+  void data_unlock_all();
 };
 
 } // namespace chfs

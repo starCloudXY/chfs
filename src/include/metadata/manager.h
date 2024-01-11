@@ -13,12 +13,11 @@
 
 #include "./inode.h"
 #include "block/allocator.h"
+#include "distributed/commit_log.h"
 
 namespace chfs {
 
 // inode should be larger than 0
-const inode_id_t KInvalidInodeID = 0;
-
 class FileOperation;
 
 /**
@@ -59,6 +58,12 @@ public:
   static auto create_from_block_manager(std::shared_ptr<BlockManager> bm,
                                         u64 max_inode_supported)
       -> ChfsResult<InodeManager>;
+    /**
+     * Allocate and initialize an inode with proper type
+     * @param type: file type
+     * @param bid: inode block ID
+     */
+    auto allocate_inode(InodeType type, block_id_t bid,std::vector<std::shared_ptr<BlockOperation>> *ops) -> ChfsResult<inode_id_t>;
 
   /**
    * Get the maximum number of inode supported.
@@ -66,12 +71,6 @@ public:
    */
   auto get_max_inode_supported() const -> u64 { return max_inode_supported; }
 
-  /**
-   * Allocate and initialize an inode with proper type
-   * @param type: file type
-   * @param bid: inode block ID
-   */
-  auto allocate_inode(InodeType type, block_id_t bid) -> ChfsResult<inode_id_t>;
 
   /**
    * Get the number of free inodes

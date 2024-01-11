@@ -111,13 +111,13 @@ TEST_F(CommitLogTest, CheckConcurrentUnlink) {
 TEST_F(CommitLogTest, CheckRecoverFromFailure) {
   auto meta_srv =
       std::make_shared<MetadataServer>(meta_port, inode_path, true, true, true);
-
+std::cout<<"1\n";
   auto mk_res = meta_srv->mknode(DirectoryType, 1, "dir");
   EXPECT_EQ(mk_res, 0);
-
+        std::cout<<"2\n";
   // error occurs
   meta_srv->recover();
-
+        std::cout<<"3\n";
   auto dir_id1 = meta_srv->lookup(1, "dir");
   EXPECT_NE(dir_id1, 0);
 

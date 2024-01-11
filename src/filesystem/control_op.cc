@@ -46,7 +46,7 @@ auto FileOperation::get_free_blocks_num() const -> ChfsResult<u64> {
   return ChfsResult<u64>(block_allocator_->free_block_cnt());
 }
 
-auto FileOperation::remove_file(inode_id_t id) -> ChfsNullResult {
+auto FileOperation::remove_file(inode_id_t id,std::vector<std::shared_ptr<BlockOperation>> *ops) -> ChfsNullResult {
   auto error_code = ErrorType::DONE;
   const auto block_size = this->block_manager_->block_size();
 

@@ -34,13 +34,13 @@ protected:
 
   std::string file_name_;
   int fd;
-  u8 *block_data;
   usize block_cnt;
   bool in_memory; // whether we use in-memory to emulate the block manager
   bool maybe_failed;
-  usize write_fail_cnt;
-
+  usize write_fail_cnt = 0;
+  usize log_id = 0;
 public:
+    u8 *block_data;
   /**
    * Creates a new block manager that writes to a file-backed block device.
    * @param block_file the file name of the  file to write to
@@ -142,6 +142,18 @@ public:
   auto set_may_fail(bool may_fail) -> void {
     this->maybe_failed = may_fail;
   }
+  /**
+    * Get log start id
+    * @return
+    */
+  auto get_log_id() const -> usize { return this->log_id; }
+  /**
+    * Set the start block id for log
+    * @param log_id
+    */
+  auto set_log_id(usize id) -> void { this->log_id = id; }
+
+
 };
 
 /**

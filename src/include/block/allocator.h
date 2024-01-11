@@ -14,11 +14,12 @@
 #include <memory>
 
 #include "block/manager.h"
+#include "distributed/commit_log.h"
 
 namespace chfs {
 
 class SuperBlock;
-class InodeManager;
+class BlockOperation;
 
 /**
  * BlockManager implements a block allocator to manage blocks of the manager
@@ -32,7 +33,7 @@ class InodeManager;
  */
 class BlockAllocator {
   friend class SuperBlock;
-  friend class nodeManager;
+  friend class InodeManager;
 
 public:
   std::shared_ptr<BlockManager> bm;
@@ -85,7 +86,7 @@ public:
    *         OUT_OF_RESOURCE if there is no free block.
    *         other error code if there is other error.
    */
-  auto allocate() -> ChfsResult<block_id_t>;
+  auto allocate(std::vector<std::shared_ptr<BlockOperation>> *ops,block_id_t* alloc_block_id) -> ChfsResult<block_id_t>;
 
   /**
    * Deallocate a block.

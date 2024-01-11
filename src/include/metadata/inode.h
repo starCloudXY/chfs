@@ -204,7 +204,7 @@ public:
       -> ChfsResult<block_id_t> {
     if (this->blocks[this->nblocks - 1] == KInvalidBlockID) {
       // aha, we need to allocate one
-      auto bid = allocator->allocate();
+      auto bid = allocator->allocate(nullptr, nullptr);
       if (bid.is_err()) {
         return ChfsResult<block_id_t>(bid.unwrap_error());
       }

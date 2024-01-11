@@ -24,7 +24,8 @@ foreach (chfs_test_source ${CHFS_TEST_SOURCES})
     string(REPLACE ".cc" "" chfs_test_name ${chfs_test_filename})
 
     # Add the test target separately and as part of "make check-tests".
-    add_executable(${chfs_test_name} EXCLUDE_FROM_ALL ${chfs_test_source})
+    add_executable(${chfs_test_name} EXCLUDE_FROM_ALL ${chfs_test_source}
+            distributed/dataserver_test.cc)
     add_dependencies(build-tests ${chfs_test_name})
     add_dependencies(check-tests ${chfs_test_name})
 

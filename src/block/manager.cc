@@ -81,21 +81,48 @@ BlockManager::BlockManager(const std::string &file, usize block_cnt, bool is_log
   this->write_fail_cnt = 0;
   this->maybe_failed = false;
   // TODO: Implement this function.
-  UNIMPLEMENTED();    
+  this->fd = open(file.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+  CHFS_ASSERT(this->fd != -1, "Failed to open the block manager file");
+  std::filesystem::path path = this->file_name_;
+  auto file_size = std::filesystem::file_size(path);
+  if (file_size == 0) {
+        initialize_file(this->fd, this->total_storage_sz());
+    }
+  else {
+        this->block_cnt = file_size / this->block_sz;
+    }
+  this->block_data =
+          static_cast<u8 *>(mmap(nullptr, this->total_storage_sz(),
+                                   PROT_READ | PROT_WRITE, MAP_SHARED, this->fd, 0));
+  CHFS_ASSERT(this->block_data != MAP_FAILED, "Failed to mmap the data");
+
+  if (is_log_enabled) {
+      // reserve 1024 blocks for log
+      CHFS_ASSERT(this->block_cnt >= 1024, "not enough space for logger");
+      this->block_cnt -= 1024;
+    }
 }
 
+//    write_block: Write a block to the internal block device. There is no block cache in this lab.
+//    write_partial_block: Write a partial block to the block device, provided the offset and length of the written contents in the block.
+//    zero_block: Clear the contents of a block.
+//    read_block: Read the block contents into a buffer.
 auto BlockManager::write_block(block_id_t block_id, const u8 *data)
     -> ChfsNullResult {
+std::cout<<"write "<<this->maybe_failed<<"   "<<block_id<<"   "<<this->block_cnt<<"   "<<this->write_fail_cnt<<std::endl;
   if (this->maybe_failed && block_id < this->block_cnt) {
     if (this->write_fail_cnt >= 3) {
       this->write_fail_cnt = 0;
+      std::cout<<"invalid!!\n";
       return ErrorType::INVALID;
     }
   }
-  
 
   // TODO: Implement this function.
-  UNIMPLEMENTED();
+    CHFS_ASSERT(block_id < this->block_cnt, "Blockid is too big");
+    for(usize i=0;i<block_sz;i++){
+        this->block_data[block_id*block_sz+i]=data[i];
+    }
   this->write_fail_cnt++;
   return KNullOk;
 }
@@ -110,26 +137,32 @@ auto BlockManager::write_partial_block(block_id_t block_id, const u8 *data,
     }
   }
 
+    CHFS_ASSERT(block_id <= block_cnt, "Blockid is too big");
+    CHFS_ASSERT(offset+len <= block_sz, "Offset and len is too big");
+    auto block = this->block_data + block_id * block_sz + offset;
+    memcpy(block, data, len);
   // TODO: Implement this function.
-  UNIMPLEMENTED();
   this->write_fail_cnt++;
   return KNullOk;
 }
 
 auto BlockManager::read_block(block_id_t block_id, u8 *data) -> ChfsNullResult {
-
-  // TODO: Implement this function.
-  UNIMPLEMENTED();
-
+    CHFS_ASSERT(block_id <= block_cnt, "Blockid is too big");
+    auto block = this->block_data + block_id * block_sz;
+    memcpy(data, block, block_sz);
+    for(int i=0;i<block_sz;i++){
+        printf("%2X ",data[i]);
+    }
+    std::cout<<std::endl;
   return KNullOk;
 }
 
 auto BlockManager::zero_block(block_id_t block_id) -> ChfsNullResult {
-  
   // TODO: Implement this function.
-  UNIMPLEMENTED();
-
-  return KNullOk;
+    if(block_id>= this->block_cnt)return ChfsNullResult (ErrorType::INVALID_ARG);
+    auto block = this->block_data + block_id * block_sz;
+    memset(block, 0, block_sz);
+    return KNullOk;
 }
 
 auto BlockManager::sync(block_id_t block_id) -> ChfsNullResult {
@@ -172,7 +205,7 @@ auto BlockIterator::create(BlockManager *bm, block_id_t start_block_id,
 
   std::vector<u8> buffer(bm->block_sz);
 
-  auto res = bm->read_block(iter.cur_block_off / bm->block_sz + start_block_id,
+  auto res = bm->read_block(iter.cur_block_off % bm->block_sz + start_block_id,
                             buffer.data());
   if (res.is_ok()) {
     iter.buffer = std::move(buffer);
