@@ -9,7 +9,7 @@ add_library(chfs STATIC ${ALL_OBJECT_FILES})
 set(CHFS_THIRDPARTY_LIBS
         fmt
         rpc
-        )
+)
 
 target_link_libraries(
         chfs

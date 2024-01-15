@@ -200,15 +200,12 @@ public:
    * Recover the system from log
    */
   auto recover() -> void {
-      std::cout<<"begin to recover.\n";
     if (!is_log_enabled_) {
-      std::cerr << "Log not enabled\n";
       return;
     }
     operation_->block_manager_->set_may_fail(false);
     commit_log->recover();
     operation_->block_manager_->set_may_fail(true);
-    std::cout<<"finish recover!\n";
   }
 
   /**

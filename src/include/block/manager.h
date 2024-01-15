@@ -21,6 +21,21 @@ namespace chfs {
 // TODO
 
 class BlockIterator;
+/**
+ * `BlockOperation` is an entry indicates an old block state and
+ * a new block state. It's used to redo the operation when
+ * the system is crashed.
+ */
+    class BlockOperation {
+    public:
+        explicit BlockOperation(block_id_t block_id, std::vector<u8> new_block_state)
+                : block_id_(block_id), new_block_state_(new_block_state) {
+            CHFS_ASSERT(new_block_state.size() == DiskBlockSize, "invalid block state");
+        }
+
+        block_id_t block_id_;
+        std::vector<u8> new_block_state_;
+    };
 
 /**
  * BlockManager implements a block device to read/write block devices

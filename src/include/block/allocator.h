@@ -14,12 +14,11 @@
 #include <memory>
 
 #include "block/manager.h"
-#include "distributed/commit_log.h"
 
 namespace chfs {
 
 class SuperBlock;
-class BlockOperation;
+
 
 /**
  * BlockManager implements a block allocator to manage blocks of the manager
@@ -86,7 +85,7 @@ public:
    *         OUT_OF_RESOURCE if there is no free block.
    *         other error code if there is other error.
    */
-  auto allocate(std::vector<std::shared_ptr<BlockOperation>> *ops,block_id_t* alloc_block_id) -> ChfsResult<block_id_t>;
+  auto allocate(std::vector<std::shared_ptr<BlockOperation>> *ops= nullptr,block_id_t* alloc_block_id= nullptr) -> ChfsResult<block_id_t>;
 
   /**
    * Deallocate a block.
@@ -95,7 +94,7 @@ public:
    * @return INVALID_ARG if the block id is freed.
    *         other error code if there is other error.
    */
-  auto deallocate(block_id_t block_id) -> ChfsNullResult;
+  auto deallocate(block_id_t block_id,std::vector<std::shared_ptr<BlockOperation>>* ops= nullptr) -> ChfsNullResult;
 };
 
 } // namespace chfs

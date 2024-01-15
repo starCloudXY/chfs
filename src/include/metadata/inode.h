@@ -169,7 +169,8 @@ public:
    * @param bm the block manager
    */
   auto write_indirect_block(std::shared_ptr<BlockManager> &bm,
-                            std::vector<u8> &buffer) -> ChfsNullResult;
+                            std::vector<u8> &buffer,
+                            std::vector<std::shared_ptr<BlockOperation>>* ops) -> ChfsNullResult;
 
   /**
    * Set the direct block ID given an index

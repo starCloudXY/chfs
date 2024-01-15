@@ -143,44 +143,46 @@ auto FileOperation::lookup(inode_id_t id, const char *name)
 // {Your code here}
 auto FileOperation::mk_helper(inode_id_t id, const char *name, InodeType type,std::vector<std::shared_ptr<BlockOperation>> *ops)
     -> ChfsResult<inode_id_t> {
-        // TODO:
-        // 1. Check if `name` already exists in the parent.
-        //    If already exist, return ErrorType::AlreadyExist.
-        std::list<DirectoryEntry> list;
-        read_directory(this, id, list);
-        for(auto file : list){
-            if(std::string(name) == file.name){
-                return ChfsResult<inode_id_t>(ErrorType::AlreadyExist);
-            }
+        auto res = lookup(id, name);
+        if (res.is_ok()) {
+            return {ErrorType::AlreadyExist};
         }
-        // 2. Create the new inode.
-        inode_id_t inode_id;
-        auto result_alloc_node = alloc_inode(type,&inode_id,ops);;
-        if(result_alloc_node.is_err()){
-            std::cerr<<typeid(result_alloc_node.unwrap_error()).name()<<"  nonononono\n";
-            return result_alloc_node.unwrap_error();
-        }
-        inode_id = result_alloc_node.unwrap();
-        // 3. Append the new entry to the parent directory.
-        std::string dir = dir_list_to_string(list);
-        std::string tmp = append_to_directory(dir, std::string(name), inode_id);
-        auto buffer = std::vector<u8>(tmp.begin(),tmp.end());
-        std::cout<<"writing "<<name<<std::endl;
-        auto result_parent = write_file(id, buffer,ops);
-        if(result_parent.is_err()){
-            return result_parent.unwrap_error();
-        }
-        return ChfsResult<inode_id_t>(inode_id);
+        // save block changes
+        ChfsResult<inode_id_t> res_(0);
+        std::vector<u8> buffer(this->block_manager_->block_size());
 
-        // return ChfsResult<inode_id_t>(static_cast<inode_id_t>(0));
+        inode_id_t inode_id = 0;
+        res_ = alloc_inode(type, ops, &inode_id);
+
+        if (res_.is_err() && !ops) {
+            return {res_.unwrap_error()};
+        } else if (res_.is_ok()) {
+            inode_id = res_.unwrap();
+        }
+
+        // append to parent
+        auto content = read_file(id);
+        if (content.is_err()) {
+            return {content.unwrap_error()};
+        }
+        auto contents = content.unwrap();
+        auto src = std::string(contents.begin(), contents.end());
+        src = append_to_directory(src, name, inode_id);
+        auto _res = write_file(id, std::vector<u8>(src.begin(), src.end()), ops);
+        if (_res.is_err()) {
+            return {_res.unwrap_error()};
+        }
+        if (res_.is_err()) {
+            return {res_.unwrap_error()};
+        }
+        return {inode_id};
 }
 
 // {Your code here}
 auto FileOperation::unlink(inode_id_t parent, const char *name,std::vector<std::shared_ptr<BlockOperation>> *ops)
     -> ChfsNullResult {
-
   // TODO:
-    // 1. Remove the file, you can use the function `remove_file`
+    // 1. Remove the file,  use the function `remove_file`
     auto inode_id = lookup(parent,name).unwrap();
     remove_file(inode_id,ops);
 
@@ -189,7 +191,10 @@ auto FileOperation::unlink(inode_id_t parent, const char *name,std::vector<std::
     read_directory(this,parent,list);
     std::string new_list = rm_from_directory(dir_list_to_string(list),name);
     auto content = std::vector<u8>(new_list.begin(),new_list.end());
-    write_file(parent, content,ops);
+    auto result_write_back = write_file(parent, content,ops);
+    if(result_write_back.is_err()){
+        return result_write_back.unwrap_error();
+    }
     return KNullOk;
 }
 

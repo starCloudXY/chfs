@@ -29,16 +29,16 @@ namespace chfs {
  * a new block state. It's used to redo the operation when
  * the system is crashed.
  */
-class BlockOperation {
-public:
-  explicit BlockOperation(block_id_t block_id, std::vector<u8> new_block_state)
-      : block_id_(block_id), new_block_state_(new_block_state) {
-    CHFS_ASSERT(new_block_state.size() == DiskBlockSize, "invalid block state");
-  }
-
-  block_id_t block_id_;
-  std::vector<u8> new_block_state_;
-};
+//class BlockOperation {
+//public:
+//  explicit BlockOperation(block_id_t block_id, std::vector<u8> new_block_state)
+//      : block_id_(block_id), new_block_state_(new_block_state) {
+//    CHFS_ASSERT(new_block_state.size() == DiskBlockSize, "invalid block state");
+//  }
+//
+//  block_id_t block_id_;
+//  std::vector<u8> new_block_state_;
+//};
 
 /**
  * `CommitLog` is a class that records the block edits into the

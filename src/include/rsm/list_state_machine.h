@@ -52,25 +52,27 @@ public:
 
     virtual std::vector<u8> snapshot() override
     {
-        std::unique_lock<std::mutex> lock(mtx);
+        std::unique_lock lock(mtx);
         std::vector<u8> data;
         std::stringstream ss;
         ss << (int)store.size();
-        for (auto value : store)
-            ss << ' ' << value;
+        for (auto value : store) ss << ' ' << value;
         std::string str = ss.str();
         data.assign(str.begin(), str.end());
         return data;
     }
-
+    void clear() { store.clear(); }
     virtual void apply_log(ChfsCommand &cmd) override
     {
         std::unique_lock<std::mutex> lock(mtx);
         const ListCommand &list_cmd = dynamic_cast<const ListCommand &>(cmd);
         store.push_back(list_cmd.value);
-        num_append_logs++;
+        ++num_append_logs;
     }
-
+    size_t get_applied_size() {
+        std::unique_lock<std::mutex> lock(mtx);
+        return store.size();
+    }
     virtual void apply_snapshot(const std::vector<u8> &snapshot) override
     {
         std::unique_lock<std::mutex> lock(mtx);

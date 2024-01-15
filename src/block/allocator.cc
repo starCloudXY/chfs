@@ -63,8 +63,12 @@ namespace chfs {
 
             bitmap.set(block_idx);
         }
+        bm->set_log_id(bm->total_blocks());
 
-        bm->write_block(cur_block_id, buffer.data());
+        auto res2 = bm->write_block(cur_block_id, buffer.data());
+        if (res2.is_err()) {
+            return;
+        }
     }
 
 // Fixme: currently we don't consider errors in this implementation
@@ -114,6 +118,10 @@ namespace chfs {
                 // The block id of the allocated block.
                 block_id_t retval_ = 0;
                 bitmap.set(res.value());
+                if (ops) {
+                    ops->emplace_back(
+                            std::make_shared<BlockOperation>(curr_block_id, buffer));
+                }
                 auto res2 = this->bm->write_block(curr_block_id, buffer.data());
                 retval_ = i * bm->block_size() * KBitsPerByte + res.value();
                 if (alloc_block_id) *alloc_block_id = retval_;
@@ -128,7 +136,9 @@ namespace chfs {
 }
 
 // Your implementation
-    auto BlockAllocator::deallocate(block_id_t block_id) -> ChfsNullResult {
+    auto BlockAllocator::deallocate(block_id_t block_id,
+                                    std::vector<std::shared_ptr<BlockOperation>>* ops
+                                     ) -> ChfsNullResult {
         if (block_id >= this->bm->total_blocks()) {
             return ChfsNullResult(ErrorType::INVALID_ARG);
         }
@@ -140,7 +150,6 @@ namespace chfs {
         bm->read_block(bitmap_block_index+ this->bitmap_block_id, buffer.data());
 
         if(Bitmap(buffer.data(),bm->block_size()).check(bit_offset)==0){
-            std::cerr << "has been cleared";
             return ChfsNullResult(ErrorType::INVALID_ARG);
         };
 

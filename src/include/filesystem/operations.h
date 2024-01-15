@@ -81,8 +81,9 @@ namespace chfs {
          * @return the id of the inode
          */
         auto alloc_inode(InodeType type,
-                         inode_id_t *free_inode_id,
-                         std::vector<std::shared_ptr<BlockOperation>> *ops)
+                         std::vector<std::shared_ptr<BlockOperation>> *ops= nullptr,
+                         inode_id_t *free_inode_id= nullptr
+                        )
                          -> ChfsResult<inode_id_t>;
 
         /**
@@ -115,7 +116,7 @@ namespace chfs {
          * @param content the content to write
          */
         auto write_file(inode_id_t, const std::vector<u8> &content,
-                        std::vector<std::shared_ptr<BlockOperation>> *ops)
+                        std::vector<std::shared_ptr<BlockOperation>> *ops= nullptr)
         -> ChfsNullResult;
 
         /**
@@ -154,7 +155,7 @@ namespace chfs {
          * @return whether the remove is ok
          */
         auto remove_file(inode_id_t,
-                         std::vector<std::shared_ptr<BlockOperation>> *ops)
+                         std::vector<std::shared_ptr<BlockOperation>> *ops= nullptr)
         -> ChfsNullResult;
 
         /**
@@ -175,7 +176,7 @@ namespace chfs {
          * @param name the name of the directory
          */
         auto mk_helper(inode_id_t parent, const char *name, InodeType type,
-                       std::vector<std::shared_ptr<BlockOperation>> *ops)
+                       std::vector<std::shared_ptr<BlockOperation>> *ops= nullptr)
         -> ChfsResult<inode_id_t>;
 
         /**

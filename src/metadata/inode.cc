@@ -9,13 +9,19 @@ auto Inode::end() -> InodeIterator {
 }
 
 auto Inode::write_indirect_block(std::shared_ptr<BlockManager> &bm,
-                                 std::vector<u8> &buffer) -> ChfsNullResult {
+                                 std::vector<u8> &buffer,
+                                 std::vector<std::shared_ptr<BlockOperation>>* ops) -> ChfsNullResult {
   if (this->blocks[this->nblocks - 1] == KInvalidBlockID) {
       std::cout<<"invalid id "<<std::endl;
     return ChfsNullResult(ErrorType::INVALID_ARG);
   }
-
-  return bm->write_block(this->blocks[this->nblocks - 1], buffer.data());
+  auto res = bm->write_block(this->blocks[this->nblocks - 1], buffer.data());
+    if (res.is_err()) return res.unwrap_error();
+    if (ops) {
+        ops->emplace_back(std::make_shared<BlockOperation>(
+                this->blocks[this->nblocks - 1], buffer));
+    }
+  return res;
 }
 
 } // namespace chfs

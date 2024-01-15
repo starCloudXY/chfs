@@ -11,18 +11,20 @@ class RaftTestPart1: public RaftTest {};
 TEST_F(RaftTestPart1, LeaderElection)
 {
   InitNodes(3);
-
   mssleep(300);
   EXPECT_GE(CheckOneLeader(), 0);
 
   mssleep(200);
   int term1 = CheckSameTerm();
-
+    std::cout<<"finish 1 ! ========================\n";
   mssleep(200);
   int term2 = CheckSameTerm();
-
+    std::cout<<"finish 2 ! ========================\n";
+  std::cout<<"finish ! ========================\n";
   EXPECT_EQ(term1, term2) << "inconsistent term";
+    std::cout<<"finish check ! ========================\n";
   EXPECT_GE(CheckOneLeader(), 0);
+    std::cout<<"------------------------------------------------- finish test\n";
 }
 
 TEST_F(RaftTestPart1, ReElection)

@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "rsm/raft/node.h"
 #include "librpc/client.h"
-#include "rsm/list_state_machine.h"
+
 
 #include <filesystem>
 
@@ -102,9 +102,12 @@ public:
 
   int CheckOneLeader()
   {
+      std::cout<<"CHECK : "<<retry_time<<" "<<configs.size()<<std::endl;
     for (int i = 0 ; i < retry_time; i++) {
+        std::cout<<"\n------------------- "<<i<<"------------------------------"<<"\n";
       std::map<int, int> term_leaders;
       for (int j = 0; j < configs.size(); j++) {
+          std::cout<<"\n+++++++++++++++++++ "<<j<<"+++++++++++++++++++++"<<"\n";
         if (!node_network_available[j]) {
           continue;
         }
@@ -112,14 +115,19 @@ public:
         auto res2 = clients[j]->call(RAFT_RPC_CHECK_LEADER);
         std::tuple<bool, int> flag_term = res2.unwrap()->as<std::tuple<bool, int>>();
         if (std::get<0>(flag_term)) {
+            std::cout<<"get leader\n";
           int term = std::get<1>(flag_term);
           EXPECT_GT(term, 0) << "leader term number invalid";
           EXPECT_EQ(term_leaders.find(term), term_leaders.end()) << "term " << term << " has more than one leader";
           term_leaders[term] = configs[j].node_id;
+
         }
+          std::cout<<"no leader\n";
       }
 
+
       if (term_leaders.size() > 0) {
+        std::cout<<"now size more than 0\n";
         auto last_term = term_leaders.rbegin();
         return last_term->second;
       }
@@ -161,7 +169,7 @@ public:
 
       EXPECT_EQ(current_term, term) << "inconsistent term";
     }
-
+    std::cout<<"finish term ------------------------------------------------------ "<<current_term<<std::endl;
     return current_term;
   }
 
@@ -170,8 +178,7 @@ public:
     for (size_t i = 0; i < configs.size(); i++) {
       auto snapshot = nodes[i]->get_snapshot_direct();
       std::unique_lock<std::mutex> lock(mtx);
-      states[i]->apply_snapshot(snapshot); 
-
+      states[i]->apply_snapshot(snapshot);
       int log_value;
       if (static_cast<int>(states[i]->store.size() > log_idx)) {
         log_value = states[i]->store[log_idx];
@@ -190,7 +197,6 @@ public:
     for (size_t i = 0; i < configs.size(); i++) {
       bool has_log;
       int log_value;
-
       auto snapshot = nodes[i]->get_snapshot_direct();
 
       std::unique_lock<std::mutex> lock(mtx);
@@ -226,6 +232,7 @@ public:
   
   int AppendNewCommand(int value, int expected_nodes)
   {
+
     ListCommand cmd(value);
     auto start = std::chrono::system_clock::now();
     auto end = start + std::chrono::seconds(3 * retry_time + rand() % 15);
@@ -251,11 +258,12 @@ public:
           break;
         }
       }
-
+        std::cout<<"=====================================================================step 2\n";
       if (log_idx != -1) {
         auto check_start = std::chrono::system_clock::now();
         while (std::chrono::system_clock::now() < check_start + std::chrono::seconds(2)) {
           int committed_nodes = NumCommitted(log_idx);
+            std::cout<<"=====================================================================commit nodes " << committed_nodes <<"  "<<expected_nodes<<"\n";
           if (committed_nodes >= expected_nodes) {
             /* The log is committed */
             int committed_value = GetCommittedValue(log_idx);

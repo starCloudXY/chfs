@@ -103,7 +103,7 @@ auto FileOperation::remove_file(inode_id_t id,std::vector<std::shared_ptr<BlockO
 
   // now free the blocks
   for (auto bid : free_set) {
-    auto res = this->block_allocator_->deallocate(bid);
+    auto res = this->block_allocator_->deallocate(bid,ops);
     if (res.is_err()) {
       return res;
     }

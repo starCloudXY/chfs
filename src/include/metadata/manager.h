@@ -18,6 +18,8 @@
 namespace chfs {
 
 // inode should be larger than 0
+const inode_id_t KInvalidInodeID = 0;
+
 class FileOperation;
 
 /**
@@ -63,7 +65,10 @@ public:
      * @param type: file type
      * @param bid: inode block ID
      */
-    auto allocate_inode(InodeType type, block_id_t bid,std::vector<std::shared_ptr<BlockOperation>> *ops) -> ChfsResult<inode_id_t>;
+    auto allocate_inode(
+            InodeType type, block_id_t bid,
+            std::vector<std::shared_ptr<BlockOperation>> *ops= nullptr,
+            inode_id_t *free_inode_id= nullptr) -> ChfsResult<inode_id_t>;
 
   /**
    * Get the maximum number of inode supported.
@@ -89,7 +94,7 @@ public:
   /**
    * Free the inode entry id
    */
-  auto free_inode(inode_id_t id) -> ChfsNullResult;
+  auto free_inode(inode_id_t id,std::vector<std::shared_ptr<BlockOperation>> *ops= nullptr) -> ChfsNullResult;
 
   /**
    * Get the attribute of the inode
@@ -117,7 +122,7 @@ public:
    * Set the block ID of the inode
    * @param idx: **physical** inode ID
    */
-  auto set_table(inode_id_t idx, block_id_t bid) -> ChfsNullResult;
+  auto set_table(inode_id_t idx, block_id_t bid,std::vector<std::shared_ptr<BlockOperation>> *ops= nullptr) -> ChfsNullResult;
 
 private:
   /**

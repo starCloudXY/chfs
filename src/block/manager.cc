@@ -109,20 +109,16 @@ BlockManager::BlockManager(const std::string &file, usize block_cnt, bool is_log
 //    read_block: Read the block contents into a buffer.
 auto BlockManager::write_block(block_id_t block_id, const u8 *data)
     -> ChfsNullResult {
-std::cout<<"write "<<this->maybe_failed<<"   "<<block_id<<"   "<<this->block_cnt<<"   "<<this->write_fail_cnt<<std::endl;
   if (this->maybe_failed && block_id < this->block_cnt) {
     if (this->write_fail_cnt >= 3) {
       this->write_fail_cnt = 0;
-      std::cout<<"invalid!!\n";
       return ErrorType::INVALID;
     }
   }
 
   // TODO: Implement this function.
-    CHFS_ASSERT(block_id < this->block_cnt, "Blockid is too big");
-    for(usize i=0;i<block_sz;i++){
-        this->block_data[block_id*block_sz+i]=data[i];
-    }
+  auto block = this->block_data + block_id * block_sz;
+  memcpy(block, data, block_sz);
   this->write_fail_cnt++;
   return KNullOk;
 }
@@ -137,7 +133,6 @@ auto BlockManager::write_partial_block(block_id_t block_id, const u8 *data,
     }
   }
 
-    CHFS_ASSERT(block_id <= block_cnt, "Blockid is too big");
     CHFS_ASSERT(offset+len <= block_sz, "Offset and len is too big");
     auto block = this->block_data + block_id * block_sz + offset;
     memcpy(block, data, len);
@@ -147,13 +142,8 @@ auto BlockManager::write_partial_block(block_id_t block_id, const u8 *data,
 }
 
 auto BlockManager::read_block(block_id_t block_id, u8 *data) -> ChfsNullResult {
-    CHFS_ASSERT(block_id <= block_cnt, "Blockid is too big");
     auto block = this->block_data + block_id * block_sz;
     memcpy(data, block, block_sz);
-    for(int i=0;i<block_sz;i++){
-        printf("%2X ",data[i]);
-    }
-    std::cout<<std::endl;
   return KNullOk;
 }
 

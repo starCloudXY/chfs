@@ -18,7 +18,7 @@ namespace chfs {
         usize block_cnt = 1024 - 2;
         this->block_sz = bm_->block_size();
         auto meta_per_block = block_sz / sizeof(LogInfo);
-        // NOTICE: reserve 2 blocks for commit log
+        // reserve 2 blocks for commit log
         this->entry_block_cnt_ = block_cnt / meta_per_block;
         if (block_cnt % meta_per_block != 0) {
             entry_block_cnt_++;
@@ -127,7 +127,8 @@ namespace chfs {
 
 // {Your code here}
     auto CommitLog::checkpoint() -> void {
-        recover(); }
+        recover();
+    }
 
 // {Your code here}
     auto CommitLog::recover() -> void {
@@ -187,6 +188,7 @@ namespace chfs {
             bm_->sync(this->commit_block_id_);
             bm_->sync(this->commit_block_id_ + 1);
         }
+        commit_buffer.clear();
         commit_num_ = 0;
     }
 }  // namespace chfs

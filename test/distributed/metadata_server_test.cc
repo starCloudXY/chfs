@@ -522,16 +522,17 @@ TEST_F(MetadataServerTest, CheckInvariant3) {
 TEST_F(MetadataServerTest, CheckInvariant4) {
   // This test create and unlink files from these 2 directories at the same time
   auto dir_id_1 = meta_srv->mknode(DirectoryType, 1, "SubDirA");
+  std::cout<<"1";
   EXPECT_EQ(dir_id_1, 2);
   auto dir_id_2 = meta_srv->mknode(DirectoryType, 1, "SubDirB");
   EXPECT_EQ(dir_id_2, 3);
-
+        std::cout<<"finish making nodes1\n";
   // First creates 2 files as init state
   auto file_id1 = meta_srv->mknode(RegularFileType, dir_id_1, "fileA");
   EXPECT_EQ(file_id1, 4);
   auto file_id2 = meta_srv->mknode(RegularFileType, dir_id_2, "fileB");
   EXPECT_EQ(file_id2, 5);
-
+        std::cout<<"finish making nodes\n";
   bool is_started = false;
   std::thread t1([&is_started, &dir_id_1, this]() {
     while (!is_started) {
@@ -539,6 +540,7 @@ TEST_F(MetadataServerTest, CheckInvariant4) {
     }
 
     for (int i = 0; i < 100; i++) {
+        std::cout<<"running thread t_1\n";
       std::string file_name = "file1_" + std::to_string(i);
       auto file_id = meta_srv->mknode(RegularFileType, dir_id_1, file_name);
       EXPECT_GT(file_id, 0);
@@ -553,6 +555,7 @@ TEST_F(MetadataServerTest, CheckInvariant4) {
     }
 
     for (int i = 0; i < 100; i++) {
+        std::cout<<"running thread t_2\n";
       std::string file_name = "file2_" + std::to_string(i);
       auto file_id = meta_srv->mknode(RegularFileType, dir_id_1, file_name);
       EXPECT_GT(file_id, 0);
