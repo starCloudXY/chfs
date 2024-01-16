@@ -76,6 +76,9 @@ namespace chfs {
                 term_id_t last_included_term, int last_included_idx);
         void delete_before_nth(int n);
         std::pair<int, std::vector<int>> get_snapshot_data() const;
+        [[nodiscard]] term_id_t get_last_include_term() const {
+            return last_included_term;
+        }
         std::vector<u8> create_snap(const int commit_idx);
     private:
         std::shared_ptr<BlockManager> bm_;
@@ -122,32 +125,7 @@ namespace chfs {
         bm_ = bm;
         logs.emplace_back(LogEntry<Command>());
     }
-    template <typename Command>
-    std::vector<u8> RaftLog<Command>::create_snap(const int commit_idx) {
-        std::lock_guard lockGuard(mtx);
-        auto [size, value] = get_snapshot_data();
-        int i = 1;
-        if (size == 0) {
-            // no snapshot before
-            size = 1;
-            i = 0;
-        }
-        const auto idx = commit_idx - last_included_idx;
-        size += idx;
-        for (; i <= idx; ++i) {
-            if (i > logs.size()) break;
-            int val = logs[i].command.value;
-            value.emplace_back(val);
-        }
-        std::stringstream ss;
-        ss << size;
-        for (const auto v : value) {
-            ss << ' ' << v;
-        }
-        std::string str = ss.str();
-        std::vector<u8> data(str.begin(), str.end());
-        return data;
-    }
+
     template<typename Command>
     RaftLog<Command>::~RaftLog() {
         /* Lab3: Your code here */
@@ -161,7 +139,6 @@ namespace chfs {
         }
         logs[idx] = entry;
     }
-    ////
     template <typename Command>
     void RaftLog<Command>::delete_after_nth(int n) {
         if (logs.size() <= n) return;
@@ -176,6 +153,7 @@ namespace chfs {
         write_meta(current_term, vote_for);
         write_data();
     }
+
     template <typename Command>
     std::pair<int, std::vector<int>> RaftLog<Command>::get_snapshot_data() const {
         if (snap_bm_ == nullptr) return {0, {}};
@@ -203,6 +181,7 @@ namespace chfs {
         return {size, ret_val};
     }
 
+
     template<typename Command>
     std::pair<term_id_t,commit_id_t> RaftLog<Command>::recover() {
         std::lock_guard lockGuard(mtx);
@@ -213,6 +192,32 @@ namespace chfs {
         }
         get_data(size);
         return {cur_term, vote_for};
+    }
+    template <typename Command>
+    std::vector<u8> RaftLog<Command>::create_snap(const int commit_idx) {
+        std::lock_guard lockGuard(mtx);
+        auto [size, value] = get_snapshot_data();
+        int i = 1;
+        if (size == 0) {
+            // no snapshot before
+            size = 1;
+            i = 0;
+        }
+        const auto idx = commit_idx - last_included_idx;
+        size += idx;
+        for (; i <= idx; ++i) {
+            if (i > logs.size()) break;
+            int val = logs[i].command.value;
+            value.emplace_back(val);
+        }
+        std::stringstream ss;
+        ss << size;
+        for (const auto v : value) {
+            ss << ' ' << v;
+        }
+        std::string str = ss.str();
+        std::vector<u8> data(str.begin(), str.end());
+        return data;
     }
     template<typename Command>
     void RaftLog<Command>::write_meta(const term_id_t current_term,
@@ -262,9 +267,7 @@ namespace chfs {
     template<typename Command>
     commit_id_t RaftLog<Command>::append_log(term_id_t term, Command command) {
         std::lock_guard lockGuard(mtx);
-//        std::cout<<"append_log "<<term<<"  "<<command<<std::endl;
-        auto entry = LogEntry<Command>(term, command);
-        logs.emplace_back(entry);
+        logs.emplace_back(LogEntry<Command>(term, command));
         return logs.size() - 1;
     }
     ///TODO
@@ -341,9 +344,12 @@ namespace chfs {
     std::pair<term_id_t, commit_id_t> RaftLog<Command>::get_last() {
         std::lock_guard lockGuard(mtx);
         if (logs.size() <= 1) {
-            return {last_included_term, last_included_idx};
+            return {
+                last_included_term,
+                last_included_idx};
         }
-        return {logs.back().term_id, last_included_idx + logs.size() - 1};
+        return {logs.back().term_id,
+                last_included_idx + logs.size() - 1};
 }
 
     template <typename Command>
@@ -352,7 +358,7 @@ namespace chfs {
         return logs.size();
     }
 ////
-    template<typename Command>
+    template <typename Command>
     void RaftLog<Command>::write_data() {
         std::stringstream ss;
         int used_bytes = 0, block_idx = 0;
@@ -360,7 +366,7 @@ namespace chfs {
         for (auto &log: logs) {
             ss << log.term_id << ' '
                << (int) log.command.value << ' ';
-//            std::cout<<"[WRITE DATA]  "<<log.term_id<<' '<<(int) log.command.value<<std::endl;
+            std::cout<<"[WRITE DATA]  "<<log.term_id<<' '<<(int)log.command.value<<std::endl;
             used_bytes += per_entry_size;
             if (first) {
                 first = false;
@@ -382,12 +388,16 @@ namespace chfs {
             }
         }
 
+        std::string str = ss.str();
+        const std::vector<u8> data(str.begin(), str.end());
+        data_bm_->write_partial_block(block_idx++, data.data(), 0,
+                                      data.size());
+
     }
     ////?
     template <typename Command>
     std::vector<LogEntry<Command>> RaftLog<Command>::get_after_nth(int n) {
         if (logs.size() <= n) return {};
-
         auto begin_ = logs.begin() + n + 1;
         auto ret_val = std::vector<LogEntry<Command>>(begin_, logs.end());
         return ret_val;

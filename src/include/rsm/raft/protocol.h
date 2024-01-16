@@ -78,13 +78,13 @@ RpcAppendEntriesArgs transform_append_entries_args(const AppendEntriesArgs<Comma
     /* Lab3: Your code here */
     std::stringstream ss;
     std::vector<LogEntry<Command>> entries;
-    ss  << arg.alive<<' '
-        << arg.last_included_idx<<' '
-        << arg.term<< ' '
+    ss  << arg.term<< ' '
         << arg.leader_id<< ' '
         << arg.prev_log_index << ' '
         << arg.prev_log_term<< ' '
         << arg.leader_commit<<' '
+        << arg.alive<<' '
+        << arg.last_included_idx<<' '
         << static_cast<int>(arg.entries.size());
     for (const auto& entry : arg.entries) {
         ss << ' ' << entry.term_id << ' ' << entry.command.value;
@@ -103,29 +103,28 @@ AppendEntriesArgs<Command> transform_rpc_append_entries_args(const RpcAppendEntr
 
     std::stringstream ss({rpc_arg.data.begin(),rpc_arg.data.end()});
 
-    ss  >> arg.alive
-        >> arg.last_included_idx
-        >> arg.term
+    ss  >> arg.term
         >> arg.leader_id
         >> arg.prev_log_index
         >> arg.prev_log_term
         >> arg.leader_commit
+        >> arg.alive
+        >> arg.last_included_idx
         >> size;
-    std::cout<<"[ARG RECEIVE] \t"<<  arg.alive<<' '
-                           << arg.last_included_idx<<' '
+    std::cout<<"[ARG RECEIVE] \t"
                            << arg.term<< ' '
                            << arg.leader_id<< ' '
                            << arg.prev_log_index << ' '
                            << arg.prev_log_term<< ' '
                            << arg.leader_commit<<' '
+            <<  arg.alive<<' '
+            << arg.last_included_idx<<' '
                            << size <<' ';
     term_id_t term = 0;
     int cmd;
     for (int i = 0; i < size; ++i) {
         ss >> term >> cmd;
-        auto entry = LogEntry<Command>{term, cmd};
-        std::cout<<term<<' '<<entry.command.value<<' ';
-        arg.entries.emplace_back();
+        arg.entries.emplace_back(LogEntry<Command>{term, cmd});
     }
     std::cout<<std::endl;
     return arg;
