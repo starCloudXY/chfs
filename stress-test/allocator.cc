@@ -38,8 +38,8 @@ TEST(BlockAllocatorTest, StressTest1) {
       ASSERT_TRUE(block.is_ok());
 
       if (active_blocks.find(block.unwrap()) != active_blocks.end()) {
-        std::cerr << "Block allocated twice for: " << block.unwrap()
-                  << std::endl;
+//        std::cerr << "Block allocated twice for: " << block.unwrap()
+//                  << std::endl;
         FAIL();
       }
       active_blocks.insert(block.unwrap());
@@ -58,8 +58,8 @@ TEST(BlockAllocatorTest, StressTest1) {
   // some final checks
   auto after_free_blocks = allocator.free_block_cnt();
   ASSERT_EQ(after_free_blocks + active_blocks.size(), before_free_blocks);
-  std::cout << "Final check: active_blocks count: " << active_blocks.size()
-            << std::endl;
+//  std::cout << "Final check: active_blocks count: " << active_blocks.size()
+//            << std::endl;
 }
 
 } // namespace chfs
