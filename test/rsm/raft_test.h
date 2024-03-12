@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "rsm/raft/node.h"
 #include "librpc/client.h"
-#include "rsm/list_state_machine.h"
+
 
 #include <filesystem>
 
@@ -103,6 +103,7 @@ public:
   int CheckOneLeader()
   {
     for (int i = 0 ; i < retry_time; i++) {
+        std::cout<<i<<"\n";
       std::map<int, int> term_leaders;
       for (int j = 0; j < configs.size(); j++) {
         if (!node_network_available[j]) {
@@ -170,7 +171,7 @@ public:
     for (size_t i = 0; i < configs.size(); i++) {
       auto snapshot = nodes[i]->get_snapshot_direct();
       std::unique_lock<std::mutex> lock(mtx);
-      states[i]->apply_snapshot(snapshot); 
+      states[i]->apply_snapshot(snapshot);
 
       int log_value;
       if (static_cast<int>(states[i]->store.size() > log_idx)) {
@@ -255,7 +256,9 @@ public:
       if (log_idx != -1) {
         auto check_start = std::chrono::system_clock::now();
         while (std::chrono::system_clock::now() < check_start + std::chrono::seconds(2)) {
+
           int committed_nodes = NumCommitted(log_idx);
+            std::cout<<"==================================================="<<"lod idx  "<<log_idx<<" commit nodes " << committed_nodes <<"  "<<expected_nodes<<"\n";
           if (committed_nodes >= expected_nodes) {
             /* The log is committed */
             int committed_value = GetCommittedValue(log_idx);

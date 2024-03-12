@@ -16,6 +16,7 @@ RUN apt-get -y update && \
       cmake \
       doxygen \
       git \
+      gdb \
       g++-12 \
       pkg-config \
       zlib1g-dev && \

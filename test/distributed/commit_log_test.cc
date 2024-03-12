@@ -39,7 +39,6 @@ TEST_F(CommitLogTest, CheckConcurrent) {
     EXPECT_GT(mk_res, 1);
   });
 
-  std::cerr << "Start to test\n\n\n";
 
   is_started = true;
   t1.join();
@@ -111,13 +110,10 @@ TEST_F(CommitLogTest, CheckConcurrentUnlink) {
 TEST_F(CommitLogTest, CheckRecoverFromFailure) {
   auto meta_srv =
       std::make_shared<MetadataServer>(meta_port, inode_path, true, true, true);
-
   auto mk_res = meta_srv->mknode(DirectoryType, 1, "dir");
   EXPECT_EQ(mk_res, 0);
-
   // error occurs
   meta_srv->recover();
-
   auto dir_id1 = meta_srv->lookup(1, "dir");
   EXPECT_NE(dir_id1, 0);
 
@@ -139,14 +135,12 @@ TEST_F(CommitLogTest, CheckCheckpointFunctional) {
     EXPECT_GT(mk_res, 1);
   }
 
-  std::cerr << "mknode done\n";
 
   for (int i = 0; i < 100; i++) {
     auto del_res = meta_srv->unlink(1, "dir-" + std::to_string(i));
     EXPECT_EQ(del_res, true);
   }
 
-  std::cerr << "unlink done\n";
 
   // Check log entries
   auto log_entries = meta_srv->get_log_entries();
